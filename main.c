@@ -85,14 +85,14 @@ void generate_cube(int center[3], int width, bool gen_triangle, int points[8][3]
     return;
 }
 
-#define LAST_POINTS_SIZE 1000
-#define ALL_POINTS_SIZE 1000 
+#define LAST_POINTS_SIZE 100000
+#define ALL_POINTS_SIZE  100000
 
 int last_points_idx = 0;
-int last_points_arr[LAST_POINTS_SIZE][4];//last idx is iteration
+static int last_points_arr[LAST_POINTS_SIZE][4];//last idx is iteration
 
 int all_points_idx = 0;
-int all_points_arr[ALL_POINTS_SIZE][4];
+static int all_points_arr[ALL_POINTS_SIZE][4];
 
 void print_last_arr(int arr[LAST_POINTS_SIZE][4], int length){
     for(int i = 0; i < length; i++){
@@ -126,7 +126,10 @@ void populate_michael_sponge(int iterations){
     for(int i = 1; i < iterations; i++){
         int local_last_idx = 0;
         int local_last_arr[LAST_POINTS_SIZE][4];
+        if(last_points_idx < 0) break;
+        // printf("idx %d %d\n", last_points_idx, i);
         for(int j = 0; j < last_points_idx; j++){
+            // printf("%d\n", j);
             int local_cube[8][3];
             int width = 2 * 3 * (my_pow(3, iterations - i));
             int center[3] = {last_points_arr[j][0],last_points_arr[j][1],last_points_arr[j][2]};
@@ -155,13 +158,22 @@ void populate_michael_sponge(int iterations){
         // int center[3] = {0,0,0};
         int michael_idx = iterations - all_points_arr[i][3] - 1;
         int width = 2 * (my_pow(3, michael_idx));
-        // printf("Generating cube at %d,%d,%d with size %d\r\n", center[0], center[1], center[2], width);
+        printf("Generating cube at %d,%d,%d with size %d\r\n", center[0], center[1], center[2], width);
         generate_cube(center, width, true, cube_points);
         // generate_cube(center, 6);
     }
 }
 
 int main() {
+    int iterations = 2;
+    printf("How many iterations?: ");
+    scanf("%d", &iterations);
+    printf("\r\n%d iterations\r\n", iterations);
+    if(my_pow(8, iterations) > LAST_POINTS_SIZE){
+        printf("Too many iterations!");
+        // return 1;
+    }
+
     fptr = fopen("cube.stl", "w");
     if (fptr == NULL) {
         printf("Error opening file!\r\n");
@@ -169,8 +181,8 @@ int main() {
     }
 
     fprintf(fptr,"solid name\r\n");
-    // generate_cube(0, 2);
-    populate_michael_sponge(4);
+    populate_michael_sponge(iterations);
     fprintf(fptr,"endsolid name\r\n");
+    printf("Done!\r\n");
     return 0;
 }
