@@ -100,6 +100,16 @@ void print_last_arr(int arr[LAST_POINTS_SIZE][4], int length){
     }
 }
 
+int my_pow(int base, int power){
+    if (power == 0) return 1;
+
+    int result = base;
+    for(int i = 1; i < power; i++){
+        result = result * base;
+    }
+    return result;
+}
+
 void populate_michael_sponge(int iterations){
     all_points_arr[all_points_idx][0] = 0;
     all_points_arr[all_points_idx][1] = 0;
@@ -118,7 +128,7 @@ void populate_michael_sponge(int iterations){
         int local_last_arr[LAST_POINTS_SIZE][4];
         for(int j = 0; j < last_points_idx; j++){
             int local_cube[8][3];
-            int width = 2;
+            int width = 2 * 3 * (my_pow(3, iterations - i));
             int center[3] = {last_points_arr[j][0],last_points_arr[j][1],last_points_arr[j][2]};
             generate_cube(center, width, false, local_cube);
             for(int k = 0; k < 8; k++){
@@ -126,11 +136,10 @@ void populate_michael_sponge(int iterations){
                 // printf("CUbe: %d %d %d\n", local_cube[k][0], local_cube[k][1], local_cube[k][2]);
                 local_last_arr[local_last_idx][1] = local_cube[k][1];
                 local_last_arr[local_last_idx][2] = local_cube[k][2];
-                local_last_arr[local_last_idx][3] = iterations;
+                local_last_arr[local_last_idx][3] = i;
                 local_last_idx++;
             }
         }
-        // print_last_arr(local_last_arr, local_last_idx);
         memcpy(last_points_arr, local_last_arr, sizeof(last_points_arr));
         memcpy(&all_points_arr[all_points_idx], local_last_arr, local_last_idx * sizeof(local_last_arr[0]));
         all_points_idx += local_last_idx;
@@ -143,10 +152,10 @@ void populate_michael_sponge(int iterations){
     for (int i = 0; i < all_points_idx; i++) {
         int center[3] = {all_points_arr[i][0], all_points_arr[i][1], all_points_arr[i][2]};
         // int center[3] = {0,0,0};
-        printf("allidx %x all p%d\n", all_points_idx, all_points_arr[i][3]);
         int michael_idx = iterations - all_points_arr[i][3] - 1;
-        printf("Generating cube at %d,%d,%d with size %d\n", center[0], center[1], center[2], michael_idx * michael_idx * michael_idx);
-        // generate_cube(center, michael_idx * michael_idx * michael_idx, true, cube_points);
+        int width = 2 * (my_pow(3, michael_idx));
+        printf("Generating cube at %d,%d,%d with size %d\n", center[0], center[1], center[2], width);
+        generate_cube(center, width, true, cube_points);
         // generate_cube(center, 6);
     }
 }
@@ -160,7 +169,7 @@ int main() {
 
     fprintf(fptr,"solid name\n");
     // generate_cube(0, 2);
-    populate_michael_sponge(2);
+    populate_michael_sponge(4);
     fprintf(fptr,"endsolid name\n");
     return 0;
 }
